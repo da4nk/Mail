@@ -1,0 +1,15 @@
+textarea {
+    min-height: 400px;
+}
+
+.email
+{
+    border: gray 1px solid;
+    display: flex;
+    justify-content: space-between;
+    
+}
+.read
+{
+    background: lightgray;
+}
