@@ -7,8 +7,13 @@ textarea {
     border: gray 1px solid;
     display: flex;
     justify-content: space-between;
-    
+    cursor: pointer;
 }
+.email:hover
+{
+    background: darkgray;
+}
+
 .read
 {
     background: lightgray;

@@ -58,6 +58,8 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  const row = document.createElement('div');
+  
 
   // Show the mailbox name
   document.querySelector('#emails-view-headline').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -69,7 +71,8 @@ function load_mailbox(mailbox) {
       emails.forEach(email => {
       if(mailbox === 'sent' && emails != null)
       {
-      
+        view_email(email.id, email, row);
+
           const row = document.createElement('div');
           
           row.innerHTML = `<p> Email to ${email.recipients} Sent ${email.timestamp}. Subject: ${email.subject} </p>`;
@@ -84,23 +87,27 @@ function load_mailbox(mailbox) {
 
 
           row.classList.add('email', 'p-2', 'm-3');
-          
+       
           document.querySelector('#emails-view-headline').appendChild(row);
 
         }
+
         
        
 
 
         if(mailbox === 'inbox')
         {
+       
         const row = document.createElement('div');
-        row.innerHTML = `<p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
+        row.innerHTML = `<hidden><p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
+        view_email(row, mailbox)
+
         if(email.read === true)
         {
           row.classList.add('read');
           row.classList.add('email', 'p-3', 'm-3');
-          
+        
 
         }
         // check if email is read or unread 
@@ -143,3 +150,24 @@ function send_email(e)
 
 
 }
+
+function view_email(id, email, row)
+{
+
+row.addEventListener('click', () => 
+          {
+          
+          fetch(`/emails/${id}`).then(
+            response => response.json()).
+            then(emails => {
+      
+              row.addEventListener('click', () => 
+              {
+                document.querySelector('#emails-view').style.display = 'none';
+                row.innerHTML = `<div>  <ul> <li> From: ${} </li>  </ul> </div>`
+              
+              });
+      
+            });
+          });
+        }
