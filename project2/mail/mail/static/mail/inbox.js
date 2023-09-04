@@ -40,6 +40,8 @@ function compose_email() {
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('.email-body').style.display = 'none';
+  document.querySelector('#emails-view-headline').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -58,37 +60,33 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
-  const row = document.createElement('div');
+  document.querySelector('.email-body').style.display = 'none';
+  document.querySelector('#emails-view-headline').style.display = 'none';
+
+  
+  
   
 
   // Show the mailbox name
-  document.querySelector('#emails-view-headline').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
    
 
     fetch(`/emails/${mailbox}`)
     .then(response => response.json())
     .then(emails => {
       emails.forEach(email => {
+
+      const row = document.createElement('div');
+      
       if(mailbox === 'sent' && emails != null)
       {
-        view_email(email.id, email, row);
-
-          const row = document.createElement('div');
           
           row.innerHTML = `<p> Email to ${email.recipients} Sent ${email.timestamp}. Subject: ${email.subject} </p>`;
 
-          if(email.read === true)
-          {
-            row.classList.add('email', 'p-2', 'm-3');
+          //  check if email is read
+          email.read ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');
 
-            row.classList.add('read');
-          }
-          // check if email is read or unread 
-
-
-          row.classList.add('email', 'p-2', 'm-3');
-       
-          document.querySelector('#emails-view-headline').appendChild(row);
+          document.querySelector('#emails-view').appendChild(row);
 
         }
 
@@ -96,28 +94,41 @@ function load_mailbox(mailbox) {
        
 
 
-        if(mailbox === 'inbox')
+        if(mailbox === 'inbox' && emails != null)
         {
-       
-        const row = document.createElement('div');
-        row.innerHTML = `<hidden><p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
-        view_email(row, mailbox)
-
-        if(email.read === true)
-        {
-          row.classList.add('read');
-          row.classList.add('email', 'p-3', 'm-3');
+          // make button
+          const row = document.createElement('div');
+          const button = document.createElement('BUTTON');
+          button.innerHTML = '<i class="fa-solid fa-envelope"></i> mark as read';
+          button.classList.add('btn','btn-light','button');
+          row.addEventListener('click', () => view_email(email, row));
+          row.innerHTML = `<p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
+          row.appendChild(button);
         
-
-        }
+        
+        
+         
         // check if email is read or unread 
+        email.read == false ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');  
 
-
-        row.classList.add('email', 'p-2', 'm-3');
+        document.querySelector('#emails-view').appendChild(row);
         
-        document.querySelector('#emails-view-headline').appendChild(row);
-        }
+        
 
+      }
+      if(mailbox === 'archive')
+      {
+        if(emails === null)
+        {
+          row.innerHTML = '<div> <h2>No archived Emails Yet <h2> </div';
+          row.classList.add('display-2');
+        }  
+        
+
+
+      }
+
+  
 
         
       });
@@ -151,23 +162,69 @@ function send_email(e)
 
 }
 
-function view_email(id, email, row)
+function view_email(email, row)
 {
 
-row.addEventListener('click', () => 
-          {
+
+
+  // clear out pages
+    document.querySelector('#compose-view').style.display = 'none';
+    document.querySelector('#emails-view-headline').style.display = 'block';
+    document.querySelector('#emails-view').style.display = 'none';
+    // select element
+    const body = document.querySelector('.email-body');
+    body.style.display = 'block';
+    
+
+    // create html elements
+    var row = document.createElement('div');
+    const button = document.createElement('button');
+    const container = document.createElement('div');
+    const emailheadline = document.querySelector('#emails-view-headline');
+    if(emailheadline.childElementCount != -1)
+    {
+      emailheadline.removeChild(emailheadline.firstChild);
+      
+      
+    }
+
+    // get specific emails
+
+    fetch(`/emails/${email.id}`).then(
+      response => response.json()).
+      then(emails => {
+
+        emails.read = true;
+
+        // make html content for each element
+        
+        button.innerHTML = ` Reply `;
+
+          row.innerHTML = `<div>  
+          <ul>From: ${emails.sender}</ul>  
+          <ul>To: ${emails.recipients}</ul>  
+          <ul>Subject: ${emails.subject}</ul>  
+          <ul>TimeStamp: ${emails.timestamp}</ul>  
+          </div>
+          `;
           
-          fetch(`/emails/${id}`).then(
-            response => response.json()).
-            then(emails => {
-      
-              row.addEventListener('click', () => 
-              {
-                document.querySelector('#emails-view').style.display = 'none';
-                row.innerHTML = `<div>  <ul> <li> From: ${} </li>  </ul> </div>`
-              
-              });
-      
-            });
-          });
-        }
+          body.innerHTML = `${emails.body}`;
+
+          // add styling
+          row.classList.add('pb-1', 'm-2');
+          button.classList.add('ml-5','btn', 'btn-sm', 'btn-outline-primary');
+          body.classList.add('p-2', 'ml-5');
+          // append multiple elements into one
+          container.appendChild(row);
+          container.appendChild(button);  
+      });  
+      // append container of elements to view
+      document.querySelector('#emails-view-headline').appendChild(container);
+
+
+}
+
+function email_read(read)
+{
+  return true;
+}
