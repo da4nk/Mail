@@ -63,10 +63,6 @@ function load_mailbox(mailbox) {
   document.querySelector('.email-body').style.display = 'none';
   document.querySelector('#emails-view-headline').style.display = 'none';
 
-  
-  
-  
-
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
    
@@ -82,6 +78,7 @@ function load_mailbox(mailbox) {
       {
           
           row.innerHTML = `<p> Email to ${email.recipients} Sent ${email.timestamp}. Subject: ${email.subject} </p>`;
+          
 
           //  check if email is read
           email.read ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');
@@ -98,13 +95,10 @@ function load_mailbox(mailbox) {
         {
           // make button
           const row = document.createElement('div');
-          const button = document.createElement('BUTTON');
-          button.innerHTML = '<i class="fa-solid fa-envelope"></i> mark as read';
-          button.classList.add('btn','btn-light','button');
           row.addEventListener('click', () => view_email(email, row));
           row.innerHTML = `<p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
-          row.appendChild(button);
-        
+    
+          
         
         
          
@@ -175,6 +169,7 @@ function view_email(email, row)
     const body = document.querySelector('.email-body');
     body.style.display = 'block';
     
+    
 
     // create html elements
     var row = document.createElement('div');
@@ -188,13 +183,25 @@ function view_email(email, row)
       
     }
 
+      // mark email as read
+      fetch( `/emails/${email.id}`,{
+      method: 'PUT',
+      body: JSON.stringify({
+        read: true
+      })
+      
+    });
+
     // get specific emails
+
+
 
     fetch(`/emails/${email.id}`).then(
       response => response.json()).
       then(emails => {
 
-        emails.read = true;
+
+        
 
         // make html content for each element
         
@@ -212,11 +219,10 @@ function view_email(email, row)
 
           // add styling
           row.classList.add('pb-1', 'm-2');
-          button.classList.add('ml-5','btn', 'btn-sm', 'btn-outline-primary');
           body.classList.add('p-2', 'ml-5');
           // append multiple elements into one
           container.appendChild(row);
-          container.appendChild(button);  
+        
       });  
       // append container of elements to view
       document.querySelector('#emails-view-headline').appendChild(container);
@@ -224,7 +230,35 @@ function view_email(email, row)
 
 }
 
-function email_read(read)
+function archive(email)
 {
-  return true;
-}
+  
+  
+  fetch(`/emails/${email.id}`).then(response => response.JSON).then(email => {
+    if(email.archive == false)
+    {
+      fetch(`/emails/${email}`, 
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          archive: true
+        })
+      });
+      document.querySelector('.archive').innerHTML = "Unarchive";
+    }
+    else
+    {
+      document.querySelector('.archive').innerHTML = "Archive";
+      fetch(`/emails/${email}`, 
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          archive: false
+        })
+      });
+
+    }
+
+
+  });
+

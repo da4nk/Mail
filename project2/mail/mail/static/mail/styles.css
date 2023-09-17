@@ -23,7 +23,10 @@ textarea {
 {
     display: none;
 }
-.button 
-{
 
-}
+.reply 
+{
+    display: flex;
+    flex-direction: row;
+
+}   
