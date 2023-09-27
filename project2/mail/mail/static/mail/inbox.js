@@ -9,18 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#compose').addEventListener('click', compose_email);
   
 
-  // sending the email
-
-
-
-  
-    
-  
   // By default, load the inbox
   load_mailbox('inbox');
 
 });
-
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -32,9 +24,9 @@ document.querySelector('#compose-form').onsubmit = send_email;
 
 
 
-
-
 // ---------------- functions -------------------------------
+
+
 function compose_email() {
 
   // Show compose view and hide other views
@@ -62,6 +54,8 @@ function load_mailbox(mailbox) {
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('.email-body').style.display = 'none';
   document.querySelector('#emails-view-headline').style.display = 'none';
+  document.querySelector('.buttons').style.display = 'none';
+
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -72,59 +66,54 @@ function load_mailbox(mailbox) {
     .then(emails => {
       emails.forEach(email => {
 
+      // create row element
       const row = document.createElement('div');
       
+      // open sent mailbox
       if(mailbox === 'sent' && emails != null)
       {
-          
+          // email row content
           row.innerHTML = `<p> Email to ${email.recipients} Sent ${email.timestamp}. Subject: ${email.subject} </p>`;
           
-
           //  check if email is read
           email.read ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');
-
+          
+          // append row to the use view
           document.querySelector('#emails-view').appendChild(row);
 
         }
-
-        
-       
-
-
-        if(mailbox === 'inbox' && emails != null)
+        // open inbox
+        if(mailbox === 'inbox' )
         {
-          // make button
-          const row = document.createElement('div');
+          // view the email
           row.addEventListener('click', () => view_email(email, row));
+
+          // email row
           row.innerHTML = `<p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
-    
-          
         
-        
-         
         // check if email is read or unread 
         email.read == false ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');  
-
+        // append row to the use view
         document.querySelector('#emails-view').appendChild(row);
-        
-        
-
       }
-      if(mailbox === 'archive')
+
+
+
+
+
+      // open archive
+      if(mailbox === 'archive' )
       {
-        if(emails === null)
-        {
-          row.innerHTML = '<div> <h2>No archived Emails Yet <h2> </div';
-          row.classList.add('display-2');
-        }  
-        
+        // view email content
+        row.addEventListener('click', () => view_email(email, row));
+        // email content information
+        row.innerHTML = `<p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
 
-
+        // check if email is read or unread 
+        email.read == false ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');  
+        // append email to view
+        document.querySelector('#emails-view').appendChild(row);
       }
-
-  
-
-        
       });
       });
  
@@ -159,29 +148,29 @@ function send_email(e)
 function view_email(email, row)
 {
 
-
-
   // clear out pages
+
     document.querySelector('#compose-view').style.display = 'none';
     document.querySelector('#emails-view-headline').style.display = 'block';
     document.querySelector('#emails-view').style.display = 'none';
+    document.querySelector('.buttons').style.display = 'block';
     // select element
     const body = document.querySelector('.email-body');
     body.style.display = 'block';
-    
-    
 
+    const archive_button = document.querySelector('.Archive');
+
+    
     // create html elements
     var row = document.createElement('div');
     const button = document.createElement('button');
-    const container = document.createElement('div');
+    var container = document.createElement('div');
     const emailheadline = document.querySelector('#emails-view-headline');
-    if(emailheadline.childElementCount != -1)
-    {
-      emailheadline.removeChild(emailheadline.firstChild);
-      
-      
-    }
+    
+    emailheadline.innerHTML = '';   
+
+  
+
 
       // mark email as read
       fetch( `/emails/${email.id}`,{
@@ -192,26 +181,39 @@ function view_email(email, row)
       
     });
 
+    // archive funciton for button
+    archive_button.addEventListener('click', (e) => 
+    {
+      e.preventDefault();
+      archive(email);
+    }
+    );
+
+    
+    // change button state based on whether or not email is archived
+    if(email.archived === true)
+    {
+      archive_button.innerHTML = 'Unarchive';
+    }
+    if(email.archived === false)
+    {
+      archive_button.innerHTML = 'Archive';
+    }
+
+
+    
     // get specific emails
-
-
-
     fetch(`/emails/${email.id}`).then(
       response => response.json()).
       then(emails => {
 
-
-        
-
-        // make html content for each element
-        
+        // make html content for each element        
         button.innerHTML = ` Reply `;
 
           row.innerHTML = `<div>  
           <ul>From: ${emails.sender}</ul>  
           <ul>To: ${emails.recipients}</ul>  
           <ul>Subject: ${emails.subject}</ul>  
-          <ul>TimeStamp: ${emails.timestamp}</ul>  
           </div>
           `;
           
@@ -220,45 +222,51 @@ function view_email(email, row)
           // add styling
           row.classList.add('pb-1', 'm-2');
           body.classList.add('p-2', 'ml-5');
+          container.classList.add('container');
+
           // append multiple elements into one
           container.appendChild(row);
         
       });  
       // append container of elements to view
-      document.querySelector('#emails-view-headline').appendChild(container);
 
-
-}
+      document.querySelector('#emails-view-headline').append(container);
+    }
 
 function archive(email)
 {
+  // fetch the email json data
   
+  fetch(`/emails/${email.id}`).then(
+    response => response.json().then(
+      archivedstate => 
+      {
+        // check whehter or not email is archived
+        const isarchived = archivedstate.archived;
+        // turn the emailstate to the opposite of that current state
+        const newarchived_state = !isarchived;
+        // fetch the email data and change the archived state
+        fetch(`/emails/${email.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            archived: newarchived_state
+          })
   
-  fetch(`/emails/${email.id}`).then(response => response.JSON).then(email => {
-    if(email.archive == false)
-    {
-      fetch(`/emails/${email}`, 
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          archive: true
         })
-      });
-      document.querySelector('.archive').innerHTML = "Unarchive";
-    }
-    else
-    {
-      document.querySelector('.archive').innerHTML = "Archive";
-      fetch(`/emails/${email}`, 
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          archive: false
-        })
-      });
-
-    }
+      }
+    
+      )
 
 
-  });
+  );
+  load_mailbox('inbox');
+}
 
+function reply(email)
+{
+  emailheadline = querySelector('.emails-view-headline');
+  compose = querySelector('compose-view');
+  emailheadline.style.display = 'none';
+  compose.style.display = 'block';
+}
