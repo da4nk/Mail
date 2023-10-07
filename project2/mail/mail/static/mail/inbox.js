@@ -54,8 +54,8 @@ function load_mailbox(mailbox) {
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('.email-body').style.display = 'none';
   document.querySelector('#emails-view-headline').style.display = 'none';
-  document.querySelector('.buttons').style.display = 'none';
-
+  buttons = document.querySelector('.buttons').style.display = 'none';
+  archive_button = document.querySelector('.Archive');
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -66,10 +66,23 @@ function load_mailbox(mailbox) {
     .then(emails => {
       emails.forEach(email => {
 
+
+        if (email.archived === true)
+        {
+          archive_button.innerHTML = 'Unarchive'
+        }
+        else
+        {
+          archive_button.innerHTML = 'Archive';
+        }
+
+
+
       // create row element
-      const row = document.createElement('div');
-      
+        row = document.createElement('div');
+  
       // open sent mailbox
+      
       if(mailbox === 'sent' && emails != null)
       {
           // email row content
@@ -83,7 +96,7 @@ function load_mailbox(mailbox) {
 
         }
         // open inbox
-        if(mailbox === 'inbox' )
+        if(mailbox === 'inbox' && email.archived === false)
         {
           // view the email
           row.addEventListener('click', () => view_email(email, row));
@@ -102,7 +115,7 @@ function load_mailbox(mailbox) {
 
 
       // open archive
-      if(mailbox === 'archive' )
+      if(mailbox === 'archive' && email.archived === true)
       {
         // view email content
         row.addEventListener('click', () => view_email(email, row));
@@ -158,18 +171,24 @@ function view_email(email, row)
     const body = document.querySelector('.email-body');
     body.style.display = 'block';
 
-    const archive_button = document.querySelector('.Archive');
 
-    
+
     // create html elements
     var row = document.createElement('div');
     const button = document.createElement('button');
     var container = document.createElement('div');
     const emailheadline = document.querySelector('#emails-view-headline');
+    const archive_button = document.querySelector('.Archive');
+
     
     emailheadline.innerHTML = '';   
 
   
+    document.querySelector('.reply').addEventListener('click', (e) =>
+    {
+      e.preventDefault();
+      reply(email);
+    });
 
 
       // mark email as read
@@ -191,15 +210,7 @@ function view_email(email, row)
 
     
     // change button state based on whether or not email is archived
-    if(email.archived === true)
-    {
-      archive_button.innerHTML = 'Unarchive';
-    }
-    if(email.archived === false)
-    {
-      archive_button.innerHTML = 'Archive';
-    }
-
+  
 
     
     // get specific emails
@@ -241,10 +252,15 @@ function archive(email)
     response => response.json().then(
       archivedstate => 
       {
+        load_mailbox('inbox');
+
         // check whehter or not email is archived
+        archived_text = 'Archive'
+        unarchive_text = 'Unarchive';
         const isarchived = archivedstate.archived;
         // turn the emailstate to the opposite of that current state
         const newarchived_state = !isarchived;
+        
         // fetch the email data and change the archived state
         fetch(`/emails/${email.id}`,
         {
@@ -255,18 +271,25 @@ function archive(email)
   
         })
       }
-    
       )
+    
 
 
   );
-  load_mailbox('inbox');
+
 }
 
 function reply(email)
 {
-  emailheadline = querySelector('.emails-view-headline');
-  compose = querySelector('compose-view');
+  emailheadline = document.querySelector('#emails-view-headline');
+  compose = document.querySelector('#compose-view');
+  body = document.querySelector('.email-body');
+  
+  body.style.display = 'none';
   emailheadline.style.display = 'none';
-  compose.style.display = 'block';
+  compose.style.display = 'block'
+  compose.h3 = 'Reply';
+  recipient = document.querySelector('#compose-recipients').dataset.recipient;
+  recipient = email.recipient;
+
 }
