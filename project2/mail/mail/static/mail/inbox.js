@@ -79,12 +79,13 @@ function load_mailbox(mailbox) {
 
 
       // create row element
+
         row = document.createElement('div');
-  
       // open sent mailbox
       
       if(mailbox === 'sent' && emails != null)
       {
+
           // email row content
           row.innerHTML = `<p> Email to ${email.recipients} Sent ${email.timestamp}. Subject: ${email.subject} </p>`;
           
@@ -92,12 +93,13 @@ function load_mailbox(mailbox) {
           email.read ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');
           
           // append row to the use view
-          document.querySelector('#emails-view').appendChild(row);
+
 
         }
         // open inbox
         if(mailbox === 'inbox' && email.archived === false)
         {
+
           // view the email
           row.addEventListener('click', () => view_email(email, row));
 
@@ -107,7 +109,8 @@ function load_mailbox(mailbox) {
         // check if email is read or unread 
         email.read == false ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');  
         // append row to the use view
-        document.querySelector('#emails-view').appendChild(row);
+
+
       }
 
 
@@ -117,6 +120,8 @@ function load_mailbox(mailbox) {
       // open archive
       if(mailbox === 'archive' && email.archived === true)
       {
+         
+
         // view email content
         row.addEventListener('click', () => view_email(email, row));
         // email content information
@@ -125,11 +130,14 @@ function load_mailbox(mailbox) {
         // check if email is read or unread 
         email.read == false ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');  
         // append email to view
-        document.querySelector('#emails-view').appendChild(row);
+
       }
+      document.querySelector('#emails-view').appendChild(row);
+      
       });
+
       });
- 
+      
     
   
 }    
@@ -205,6 +213,7 @@ function view_email(email, row)
     {
       e.preventDefault();
       archive(email);
+
     }
     );
 
@@ -248,35 +257,22 @@ function archive(email)
 {
   // fetch the email json data
   
-  fetch(`/emails/${email.id}`).then(
-    response => response.json().then(
-      archivedstate => 
-      {
-        load_mailbox('inbox');
-
-        // check whehter or not email is archived
-        archived_text = 'Archive'
-        unarchive_text = 'Unarchive';
-        const isarchived = archivedstate.archived;
-        // turn the emailstate to the opposite of that current state
-        const newarchived_state = !isarchived;
-        
-        // fetch the email data and change the archived state
-        fetch(`/emails/${email.id}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            archived: newarchived_state
-          })
-  
-        })
-      }
-      )
+    // check whehter or not email is archived
+    const isarchived = email.archived;
+    // turn the emailstate to the opposite of that current state
+    const newarchived_state = !isarchived;
     
+    // fetch the email data and change the archived state
+    fetch(`/emails/${email.id}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        archived: newarchived_state
+      })
 
-
-  );
-
+    }).then( () => {
+      load_mailbox('inbox');
+    })
 }
 
 function reply(email)
@@ -289,7 +285,15 @@ function reply(email)
   emailheadline.style.display = 'none';
   compose.style.display = 'block'
   compose.h3 = 'Reply';
-  recipient = document.querySelector('#compose-recipients').dataset.recipient;
-  recipient = email.recipient;
+
+
+  recipient = document.querySelector('#compose-recipients')
+  subject = document.getElementById('compose-subject')
+  body = document.getElementById('compose-body');
+  recipient.value = email.sender;
+  subject.value = `Re: ${email.subject}`;
+  body.value = `On ${email.timestamp} ${email.sender} wrote: ${email.body} `;
+
+
 
 }
