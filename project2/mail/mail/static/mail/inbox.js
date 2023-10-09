@@ -59,9 +59,10 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
-   
-
-    fetch(`/emails/${mailbox}`)
+    
+  
+  
+  fetch(`/emails/${mailbox}`)
     .then(response => response.json())
     .then(emails => {
       emails.forEach(email => {
@@ -100,7 +101,6 @@ function load_mailbox(mailbox) {
         if(mailbox === 'inbox' && email.archived === false)
         {
 
-          // view the email
           row.addEventListener('click', () => view_email(email, row));
 
           // email row
@@ -122,16 +122,18 @@ function load_mailbox(mailbox) {
       {
          
 
-        // view email content
         row.addEventListener('click', () => view_email(email, row));
+
         // email content information
         row.innerHTML = `<p> Email from ${email.sender} </p> <p> Recieved ${email.timestamp}</p> <p>Subject: ${email.subject} </p>`;
 
         // check if email is read or unread 
         email.read == false ? row.classList.add('email', 'p-3', 'm-3') : row.classList.add('read', 'email', 'p-3', 'm-3');  
         // append email to view
+        
 
       }
+
       document.querySelector('#emails-view').appendChild(row);
       
       });
@@ -159,7 +161,7 @@ function send_email(e)
   })
   .then(response => response.json())
   .then(result => {
-      load_mailbox('sent');
+      load_mailbox('inbox');
 
   });
 
@@ -255,7 +257,6 @@ function view_email(email, row)
 
 function archive(email)
 {
-  // fetch the email json data
   
     // check whehter or not email is archived
     const isarchived = email.archived;
@@ -271,8 +272,14 @@ function archive(email)
       })
 
     }).then( () => {
-      load_mailbox('inbox');
-    })
+      setTimeout(function()
+      {
+        load_mailbox('inbox');
+
+      }, 500);
+
+
+    });
 }
 
 function reply(email)
